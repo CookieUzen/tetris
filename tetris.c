@@ -3,10 +3,15 @@
 #define HEIGHT 5
 #define WIDTH 5
 
-void printGrid ( int grid[HEIGHT][WIDTH] );
-void printBlock ( int blockType, int rotation );
-void filledRow ( int grid[HEIGHT][WIDTH] );
-int checkGameStatus (int grid[HEIGHT][WIDTH] );
+void printGrid();
+void printBlock();
+void filledRow();
+int checkGameStatus();
+int coordinateToX();
+int coordinateToY();
+int moveBlock(int x, int blockID, int rotation);
+int blockOut(int x, int blockID, int rotation);
+int blockCollision(int x, int blockID, int rotation);
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -25,19 +30,30 @@ int checkGameStatus (int grid[HEIGHT][WIDTH] );
 
 // block[blockType][rotation][blockNum]
 const int block[7][4][4] = {
-	 {{4,5,6,7},{2,6,10,14},{8,9,10,11},{1,5,9,13},},	// I block
-	 {{0,4,5,6},{1,2,5,9},{4,5,6,10},{1,5,8,9},},		// L block
-	 {{2,4,5,6},{1,5,9,10},{4,5,6,8},{0,1,5,9},},		// flipped L block
+	 {{4,5,6,7}, {2,6,10,14},{8,9,10,11},{1,5,9,13},},	// I block
 	 {{1,2,5,6},{1,2,5,6},{1,2,5,6},{1,2,5,6},},		// Square block
+	 {{0,4,5,6},{1,2,5,9},{4,5,6,10},{1,5,8,9},},		// flipped L block
+	 {{2,4,5,6},{1,5,9,10},{4,5,6,8},{0,1,5,9},},		// L block
 	 {{1,2,4,5},{1,5,6,10},{5,6,8,9},{0,4,5,9},},		// Flipped Z block
 	 {{1,4,5,6},{1,5,6,9},{4,5,6,9},{1,4,5,9},},		// T block
 	 {{0,1,5,6},{2,5,6,9},{4,5,9,10},{1,4,5,8},},		// Z block
 };
 
+// Stores the corners (top left, bottom right) of each tetromino. Allows for check if tetromino is out of bounds.
+// blockSilloute[blockType][rotation][blockNum]
+const int blockSilloute[3][4][2] = {
+	{ {4,7}, {2,14}, {8,11}, {1,13} },	// I block
+	{ {1,6}, {1,6}, {1,6}, {1,6} },		// Square block
+	{ {0,6}, {1,10}, {4,10}, {0,9} }, 	// flipped/normal L/T/Z Block
+};
+
+int cursorX;
+int cursorY;
+static int grid[HEIGHT][WIDTH];
 
 int main () {
-	// Initialize grid
-	static int grid[HEIGHT][WIDTH];
+
+	// Initialze Grid
 	for (int i = 0; i < HEIGHT; i++)
 		for (int j = 0; j < WIDTH; j++)
 			grid[i][j] = 0;
@@ -48,11 +64,15 @@ int main () {
 		return 0;
 	}
 
+	int cursorX = 0;
+	int cursorY = HEIGHT-1;
+	printf("%d", moveBlock(1, 0, 0));
+
 	return 0;
 }
 
 // Prints out Tetris Grid
-void printGrid ( int grid[HEIGHT][WIDTH] ) {
+void printGrid () {
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			printf("%d, ", grid[i][j]);
@@ -62,7 +82,7 @@ void printGrid ( int grid[HEIGHT][WIDTH] ) {
 }
 
 // Remove a filled row and drop rows above
-void filledRow ( int grid[HEIGHT][WIDTH] ) {
+void filledRow () {
 	for (int i = 0; i < HEIGHT; i++) {
 		int haveZero = 0;
 		for (int j = 0; j < WIDTH; j++) {
@@ -90,7 +110,7 @@ void filledRow ( int grid[HEIGHT][WIDTH] ) {
 }
 
 // Checking if tetris board is filled
-int checkGameStatus (int grid[HEIGHT][WIDTH] ) {
+int checkGameStatus () {
 	for (int i = 0; i < WIDTH; i++)
 		if ( grid[0][i] == 1 ) 
 			return 1;
@@ -99,6 +119,7 @@ int checkGameStatus (int grid[HEIGHT][WIDTH] ) {
 }
 
 // Print out a tetris block
+// Temporary code for debug, can be optimized
 void printBlock ( int blockType, int rotation ) {
 	int output[4][4] = {
 		{0,0,0,0},
@@ -117,4 +138,54 @@ void printBlock ( int blockType, int rotation ) {
 		}
 		printf("\n");
 	}
+}
+
+// Move tetromino left or right
+// Imagine that the block is placed ontop of the tetris grid array, with the top left corner of the tetromino 4 by 4 array on x/y of the array
+// x is the amount moved (negative for left)
+// return 1 if moveBlock failed, 0 if moveBlock is successful
+int moveBlock ( int x, int blockID, int rotation ) {
+	
+	// Check if block out of bounds 
+	if ( blockOut(x, blockID, rotation) ) 
+		return 1;
+
+	// Check if bo
+	if ( blockCollision(x, blockID, rotation) ) 
+		return 1;
+
+	cursorX += x;
+	return 0;
+}
+
+// Parse the coordinate number system to array index (x)
+int coordinateToX ( int input ) {
+	return input%4;
+}
+
+// Parse the coordinate number system to array index (y)
+int coordinateToY ( int input ) {
+	return input/4;
+}
+
+// Check if the tetromino is out of bounds
+int blockOut ( int x, int blockID, int rotation ) {
+	// BlockID that is than 1 have the same silloute
+	int xLeft  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
+	int xRight = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][2]);	
+
+	// check if out of bounds
+	if ( xLeft + cursorX + x < 0 || xRight + cursorX + x >= WIDTH ) 
+		return 1;
+	
+	return 1;
+}
+
+// Check if the tetromino is colliding with the playing field (if the tetromino is "in the ground")
+int	blockCollision (int x, int blockID, int rotation) {
+	// check if hit other objects on the board
+	for (int i = 0; i < 4; i++)
+		if ( grid[coordinateToX(block[blockID][rotation][i])][coordinateToY(block[blockID][rotation][i])] ) 
+			return 1;
+
 }
