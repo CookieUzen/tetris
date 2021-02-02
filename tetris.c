@@ -3,6 +3,55 @@
 #define HEIGHT 5
 #define WIDTH 5
 
+void printGrid ( int grid[HEIGHT][WIDTH] );
+void printBlock ( int blockType, int rotation );
+void filledRow ( int grid[HEIGHT][WIDTH] );
+int checkGameStatus (int grid[HEIGHT][WIDTH] );
+
+/*	Blocks are stored by block, based on a numbered 4 by 4 matrix
+ *	+-----------+
+ *	|0 |1 |2 |3 |
+ *	|--+--+--+--|
+ *	|4 |5 |6 |7 |
+ *	|--+--+--+--|
+ *	|8 |9 |10|11|
+ *	|--+--+--+--|
+ *	|12|13|14|15|
+ *	+-----------+
+ *
+ *  The blocks follow the Tetris Super Rotation System:
+ *  https://strategywiki.org/wiki/Tetris/Rotation_systems
+ */
+
+// block[blockType][rotation][blockNum]
+const int block[7][4][4] = {
+	 {{4,5,6,7},{2,6,10,14},{8,9,10,11},{1,5,9,13},},	// I block
+	 {{0,4,5,6},{1,2,5,9},{4,5,6,10},{1,5,8,9},},		// L block
+	 {{2,4,5,6},{1,5,9,10},{4,5,6,8},{0,1,5,9},},		// flipped L block
+	 {{1,2,5,6},{1,2,5,6},{1,2,5,6},{1,2,5,6},},		// Square block
+	 {{1,2,4,5},{1,5,6,10},{5,6,8,9},{0,4,5,9},},		// Flipped Z block
+	 {{1,4,5,6},{1,5,6,9},{4,5,6,9},{1,4,5,9},},		// T block
+	 {{0,1,5,6},{2,5,6,9},{4,5,9,10},{1,4,5,8},},		// Z block
+};
+
+
+int main () {
+	// Initialize grid
+	static int grid[HEIGHT][WIDTH];
+	for (int i = 0; i < HEIGHT; i++)
+		for (int j = 0; j < WIDTH; j++)
+			grid[i][j] = 0;
+
+	// Check if Game Over
+	if ( checkGameStatus(grid) ) {
+		printf("Game Over\n");
+		return 0;
+	}
+
+	return 0;
+}
+
+// Prints out Tetris Grid
 void printGrid ( int grid[HEIGHT][WIDTH] ) {
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
@@ -12,6 +61,7 @@ void printGrid ( int grid[HEIGHT][WIDTH] ) {
 	}
 }
 
+// Remove a filled row and drop rows above
 void filledRow ( int grid[HEIGHT][WIDTH] ) {
 	for (int i = 0; i < HEIGHT; i++) {
 		int haveZero = 0;
@@ -39,6 +89,7 @@ void filledRow ( int grid[HEIGHT][WIDTH] ) {
 	}
 }
 
+// Checking if tetris board is filled
 int checkGameStatus (int grid[HEIGHT][WIDTH] ) {
 	for (int i = 0; i < WIDTH; i++)
 		if ( grid[0][i] == 1 ) 
@@ -47,48 +98,23 @@ int checkGameStatus (int grid[HEIGHT][WIDTH] ) {
 	return 0;
 }
 
-typedef struct block {
-	// Orientation 1
-	int block1[4][4];
-	int lowest1[4];
-
-	// Orientation 2
-	int block2[4][4];
-	int lowest2[4];
-
-	// Orientation 3
-	int block3[4][4];
-	int lowest3[4];
-
-	// Orientation 4
-	int block4[4][4];
-	int lowest4[4];
-} block;
-
-int main () {
-	/*
-	// Initialize grid
-	static int grid[HEIGHT][WIDTH];
-	for (int i = 0; i < HEIGHT; i++)
-		for (int j = 0; j < WIDTH; j++)
-			grid[i][j] = 0;
-	*/
-
-	// Testing for grid
-	int grid[HEIGHT][WIDTH] = {
-		{1,0,0,0,0},
-		{1,1,0,0,0},
-		{1,1,1,0,0},
-		{1,1,1,1,0},
-		{1,1,1,1,1},
+// Print out a tetris block
+void printBlock ( int blockType, int rotation ) {
+	int output[4][4] = {
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,0},
 	};
 
-	filledRow(grid);
-	printGrid(grid);
-	if (checkGameStatus(grid)) {
-		printf("Game Over\n");
-		return 0;
+	for (int i = 0; i < 4; i++) {
+		output[ block[blockType][rotation][i]/4 ][ block[blockType][rotation][i]%4 ] = 1;
 	}
 
-	return 0;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			printf("%d ", output[i][j]);
+		}
+		printf("\n");
+	}
 }
