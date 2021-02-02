@@ -58,15 +58,9 @@ int main () {
 		for (int j = 0; j < WIDTH; j++)
 			grid[i][j] = 0;
 
-	// Check if Game Over
-	if ( checkGameStatus(grid) ) {
-		printf("Game Over\n");
-		return 0;
-	}
-
-	int cursorX = 0;
-	int cursorY = HEIGHT-1;
-	printf("%d", moveBlock(1, 0, 0));
+	// Initialize cursor
+	cursorX = 0;
+	cursorY = 0;
 
 	return 0;
 }
@@ -145,7 +139,6 @@ void printBlock ( int blockType, int rotation ) {
 // x is the amount moved (negative for left)
 // return 1 if moveBlock failed, 0 if moveBlock is successful
 int moveBlock ( int x, int blockID, int rotation ) {
-	
 	// Check if block out of bounds 
 	if ( blockOut(x, blockID, rotation) ) 
 		return 1;
@@ -171,14 +164,19 @@ int coordinateToY ( int input ) {
 // Check if the tetromino is out of bounds
 int blockOut ( int x, int blockID, int rotation ) {
 	// BlockID that is than 1 have the same silloute
-	int xLeft  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
-	int xRight = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][2]);	
+	int xLeft   = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);	
+	int xRight  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
+	int yTop    = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);	
+	int yBottom = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
 
 	// check if out of bounds
 	if ( xLeft + cursorX + x < 0 || xRight + cursorX + x >= WIDTH ) 
 		return 1;
+
+	if ( cursorY + yTop < 0 || cursorY + yBottom >= HEIGHT ) 
+		return 1;
 	
-	return 1;
+	return 0;
 }
 
 // Check if the tetromino is colliding with the playing field (if the tetromino is "in the ground")
@@ -188,4 +186,5 @@ int	blockCollision (int x, int blockID, int rotation) {
 		if ( grid[coordinateToX(block[blockID][rotation][i])][coordinateToY(block[blockID][rotation][i])] ) 
 			return 1;
 
+	return 0;
 }
