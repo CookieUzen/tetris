@@ -12,6 +12,7 @@ int coordinateToY();
 int moveBlock(int x, int blockID, int rotation);
 int blockOut(int x, int blockID, int rotation);
 int blockCollision(int x, int blockID, int rotation);
+int blockRotate(int rotation, int blockID, int currentRotation);
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -49,6 +50,7 @@ const int blockSilloute[3][4][2] = {
 
 int cursorX;
 int cursorY;
+int cursorRotation;
 static int grid[HEIGHT][WIDTH];
 
 int main () {
@@ -148,6 +150,7 @@ int moveBlock ( int x, int blockID, int rotation ) {
 		return 1;
 
 	cursorX += x;
+	cursorRotation = rotation;
 	return 0;
 }
 
@@ -185,6 +188,19 @@ int	blockCollision (int x, int blockID, int rotation) {
 	for (int i = 0; i < 4; i++)
 		if ( grid[coordinateToX(block[blockID][rotation][i])][coordinateToY(block[blockID][rotation][i])] ) 
 			return 1;
+
+	return 0;
+}
+
+int blockRotate (int rotation, int blockID, int currentRotation) {
+	
+	int finalRotation = ( currentRotation + rotation ) % 3;
+
+	// Check if block rotation is allowed (moveBlock returns 1 if it fails)
+	if ( moveBlock(0, blockID, finalRotation) )
+		if ( moveBlock(1, blockID, finalRotation) )			// test moving block and right for wallkick
+			if ( moveBlock(-1, blockID, finalRotation) ) 
+				return 1;
 
 	return 0;
 }
