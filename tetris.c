@@ -48,20 +48,24 @@ int checkGameStatus (int grid[HEIGHT][WIDTH] ) {
 }
 
 typedef struct block {
-	int block1[3][3];
-	int lowest1[3];
-	int block2[3][3];
-	int lowest2[3];
-	int block3[3][3];
-	int lowest3[3];
-	int block4[3][3];
-	int lowest4[3];
+	// Orientation 1
+	int block1[4][4];
+	int lowest1[4];
+
+	// Orientation 2
+	int block2[4][4];
+	int lowest2[4];
+
+	// Orientation 3
+	int block3[4][4];
+	int lowest3[4];
+
+	// Orientation 4
+	int block4[4][4];
+	int lowest4[4];
 } block;
 
-
-
 int main () {
-
 	/*
 	// Initialize grid
 	static int grid[HEIGHT][WIDTH];
@@ -70,6 +74,7 @@ int main () {
 			grid[i][j] = 0;
 	*/
 
+	// Testing for grid
 	int grid[HEIGHT][WIDTH] = {
 		{1,0,0,0,0},
 		{1,1,0,0,0},
