@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 
-#define HEIGHT 6
+#define HEIGHT 11
 #define WIDTH 5
 
 void printGrid();
@@ -15,6 +15,7 @@ int blockCollision(int x, int blockID, int rotation);
 int blockRotate(int rotation, int blockID, int currentRotation);
 void putBlock(int blockID, int rotation);
 int shadowBlock(int blockID, int rotation);
+void printHoverBlock(int blockID, int rotation);
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -59,41 +60,91 @@ static int grid[HEIGHT][WIDTH] = {
 	{0,0,0,0,0},
 	{0,0,0,0,0},
 	{0,0,0,0,0},
-	{0,0,1,0,0},
-	{0,0,1,0,0},
+	{0,0,0,0,0},
+	{0,0,0,0,0},
+	{0,0,0,0,0},
+	{0,0,0,0,0},
+	{0,0,0,0,0},
+	{1,0,1,0,0},
+	{1,1,1,1,0},
 };
 
 int main () {
-	// Initialze Grid
-	// for (int i = 0; i < HEIGHT; i++)
-	// 	for (int j = 0; j < WIDTH; j++)
-	// 		grid[i][j] = 0;
 
-	// Initialize cursor
-	cursorX = 0;
+	// Terminal screen width/height
+	int row, col;
+
+	// Starting ncurses
+	initscr();
+	cbreak();
+	noecho();
+	getmaxyx(stdscr,row,col);
+	start_color();
+
+	// Game Start Screen
+	curs_set(0);
+	mvprintw(row/2,(col-18)/2,"Welcome to Tetris!");
+	mvprintw(row/2+1,(col-24)/2,"(Press any key to start)");
+	getch();
+	clear();
+	init_pair(1, COLOR_BLACK,COLOR_WHITE);
+	init_pair(2, COLOR_BLACK,COLOR_BLUE);
+
+	// Start Game
+	cursorX = 2;
 	cursorY = 0;
-	int block = 0;
-	int rotation = 0;
 
+	// Print Grid
 	printGrid();
-	printf("-----------------\n");
+	shadowBlock(0,1);
+	printHoverBlock(0,1);
+	getch();
 
-	if ( ! shadowBlock(block,rotation) )
-		putBlock(block,rotation);
-
+	putBlock(0,1);
+	clear();
 	printGrid();
+	refresh();
+	getch();
 
-	return 0;
-}
+	filledRow();
+	clear();
+	printGrid();
+	getch();
 
-// Prints out Tetris Grid
-void printGrid () {
+	endwin();
+
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			printf("%d ", grid[i][j]);
 		}
 		printf("\n");
 	}
+	
+	exit(0);
+}
+
+
+// getch();
+
+// Prints out Tetris Grid
+void printGrid () {
+	move(0,0);
+	for (int i = 0; i < WIDTH*2; i++)
+		printw("-");
+
+	attron(COLOR_PAIR(1));
+	for (int i = 0; i < HEIGHT; i++) {
+		for (int j = 0; j < WIDTH; j++) {
+			move(i+1,j*2);
+			if ( grid[i][j] ) {
+				printw("  ");
+			} 
+		}
+		printw("\n");
+	}
+	attroff(COLOR_PAIR(1));
+	for (int i = 0; i < WIDTH*2; i++)
+		printw("-");
 }
 
 // Remove a filled row and drop rows above
@@ -225,5 +276,14 @@ int shadowBlock (int blockID, int rotation) {
 
 	// Retract Y
 	cursorY--;
+
 	return 0;
+}
+
+void printHoverBlock (int blockID, int rotation) {
+	attron(COLOR_PAIR(2));
+	for (int i = 0; i < 4; i++) {
+		mvprintw(coordinateToY(block[blockID][rotation][i])+1,(coordinateToX(block[blockID][rotation][i])+cursorX)*2,"  ");
+	}
+	attroff(COLOR_PAIR(2));
 }
