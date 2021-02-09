@@ -12,8 +12,8 @@ int coordinateToY();
 int moveBlock(int x, int blockID, int rotation);
 int blockOut(int x, int blockID, int rotation);
 int blockCollision(int x, int blockID, int rotation);
-int blockRotate(int rotation, int blockID, int currentRotation);
-void putBlock(int blockID, int rotation);
+int rotateBlock(int rotation, int blockID, int currentRotation);
+void putBlock();
 int shadowBlock(int blockID, int rotation);
 void printHoverBlock(int blockID, int rotation);
 
@@ -54,6 +54,7 @@ const int blockSilloute[3][4][2] = {
 int cursorX;
 int cursorY;
 int cursorRotation;
+int	cursorBlock;
 // static int grid[HEIGHT][WIDTH];
 static int grid[HEIGHT][WIDTH] = {
 	{0,0,0,0,0},
@@ -65,8 +66,8 @@ static int grid[HEIGHT][WIDTH] = {
 	{0,0,0,0,0},
 	{0,0,0,0,0},
 	{0,0,0,0,0},
-	{1,0,1,0,0},
-	{1,1,1,1,0},
+	{0,0,0,0,0},
+	{0,0,0,0,0},
 };
 
 int main () {
@@ -87,13 +88,62 @@ int main () {
 	mvprintw(row/2+1,(col-24)/2,"(Press any key to start)");
 	getch();
 	clear();
+
+	// Enable Color
 	init_pair(1, COLOR_BLACK,COLOR_WHITE);
 	init_pair(2, COLOR_BLACK,COLOR_BLUE);
 
 	// Start Game
-	cursorX = 2;
+	cursorX = 0;
 	cursorY = 0;
 
+	cursorBlock = 4;
+	cursorRotation = 0;
+	printGrid();
+	// Main Game Loop
+	do {
+		char c;
+		c = getch();
+
+		cursorY = 0;
+		// Read keyboard input until place block
+		// ad for left right, ws for rotate, eq to flip
+		switch (c) {
+			case 'a':
+				moveBlock(-1,cursorBlock,cursorRotation);
+				break;
+			case 'd':
+				moveBlock(1,cursorBlock,cursorRotation);
+				break;
+			case 'w':
+				rotateBlock(1,cursorBlock,cursorRotation);
+				break;
+			case 's':
+				rotateBlock(5,cursorBlock,cursorRotation);	// 5 is 4 + 1, modulus in rotateBlock will turn into -1
+				break;
+			case 'q':	// Flip Block
+			case 'e':
+				rotateBlock(2,cursorBlock,cursorRotation);
+				break;
+			case ' ':
+				shadowBlock(cursorBlock,cursorRotation);
+				putBlock();
+				break;
+			default:
+				break;
+		}
+
+		clear();
+		printGrid();
+		shadowBlock(cursorBlock,cursorRotation);
+		printHoverBlock(cursorBlock,cursorRotation);
+
+		// Diagnostics
+		mvprintw(10,10,"%d% d% d %d\n", cursorX, cursorY, cursorBlock, cursorRotation);
+
+	} while ( ! checkGameStatus() );
+
+	/*
 	// Print Grid
 	printGrid();
 	shadowBlock(0,1);
@@ -111,20 +161,17 @@ int main () {
 	printGrid();
 	getch();
 
-	endwin();
+	*/
 
+	endwin();
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			printf("%d ", grid[i][j]);
 		}
 		printf("\n");
 	}
-	
 	exit(0);
 }
-
-
-// getch();
 
 // Prints out Tetris Grid
 void printGrid () {
@@ -138,7 +185,7 @@ void printGrid () {
 			move(i+1,j*2);
 			if ( grid[i][j] ) {
 				printw("  ");
-			} 
+			}
 		}
 		printw("\n");
 	}
@@ -166,7 +213,7 @@ void filledRow () {
 					grid[y][x] = grid[y-1][x];
 				}
 			}
-			
+
 			// Add row at top
 			for (int x = 0; x < WIDTH; x++) {
 				grid[0][x] = 0;
@@ -176,9 +223,10 @@ void filledRow () {
 }
 
 // Checking if tetris board is filled
+// return 1 if gameover, 0 if game is continuing
 int checkGameStatus () {
 	for (int i = 0; i < WIDTH; i++)
-		if ( grid[1][i] == 1 ) 
+		if ( grid[1][i] == 1 )			// Add one spare row to top for buffer
 			return 1;
 
 	return 0;
@@ -189,12 +237,12 @@ int checkGameStatus () {
 // x is the amount moved (negative for left)
 // return 1 if moveBlock failed, 0 if moveBlock is successful
 int moveBlock ( int x, int blockID, int rotation ) {
-	// Check if block out of bounds 
-	if ( blockOut(x, blockID, rotation) ) 
+	// Check if block out of bounds
+	if ( blockOut(x, blockID, rotation) )
 		return 1;
 
 	// Check if block collides with grid
-	if ( blockCollision(x, blockID, rotation) ) 
+	if ( blockCollision(x, blockID, rotation) )
 		return 1;
 
 	cursorX += x;
@@ -215,25 +263,25 @@ int coordinateToY ( int input ) {
 // Check if the tetromino is out of bounds
 int blockOut ( int x, int blockID, int rotation ) {
 	// BlockID that is than 1 have the same silloute
-	int xLeft   = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);	
-	int xRight  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
-	int yTop    = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);	
-	int yBottom = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);	
+	int xLeft   = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);
+	int xRight  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
+	int yTop    = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);
+	int yBottom = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
 
 	// check if out of bounds
-	if ( xLeft + cursorX + x < 0 || xRight + cursorX + x >= WIDTH ) 
+	if ( xLeft + cursorX + x < 0 || xRight + cursorX + x >= WIDTH )
 		return 1;
 
-	if ( cursorY + yTop < 0 || cursorY + yBottom >= HEIGHT ) 
+	if ( cursorY + yTop < 0 || cursorY + yBottom >= HEIGHT )
 		return 1;
-	
+
 	return 0;
 }
 
 // Check if the tetromino is colliding with the playing field (if the tetromino is "in the ground")
 int	blockCollision (int x, int blockID, int rotation) {
 	// check if hit other objects on the board
-	for (int i = 0; i < 4; i++) 
+	for (int i = 0; i < 4; i++)
 		if ( grid[coordinateToY(block[blockID][rotation][i]) + cursorY][coordinateToX(block[blockID][rotation][i]) + cursorX] )
 			return 1;
 
@@ -242,23 +290,23 @@ int	blockCollision (int x, int blockID, int rotation) {
 }
 
 // Rotates the block while checking for collision/out of bounds
-int blockRotate (int rotation, int blockID, int currentRotation) {
-	
-	int finalRotation = ( currentRotation + rotation ) % 3;
+int rotateBlock (int rotation, int blockID, int currentRotation) {
+
+	int finalRotation = ( currentRotation + rotation ) % 4;
 
 	// Check if block rotation is allowed (moveBlock returns 1 if it fails)
 	if ( moveBlock(0, blockID, finalRotation) )
 		if ( moveBlock(1, blockID, finalRotation) )			// test moving block and right for wallkick
-			if ( moveBlock(-1, blockID, finalRotation) ) 
+			if ( moveBlock(-1, blockID, finalRotation) )
 				return 1;
 
 	return 0;
 }
 
 // Write the block onto the tetris grid
-void putBlock(int blockID, int rotation) {
+void putBlock() {
 	for (int i = 0; i < 4; i++)
-		grid[coordinateToY(block[blockID][rotation][i]) + cursorY][coordinateToX(block[blockID][rotation][i]) + cursorX] = 1;
+		grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = 1;
 }
 
 // Set cursorY to the lowest possible position
@@ -271,7 +319,7 @@ int shadowBlock (int blockID, int rotation) {
 	while ( ! moveBlock(0,blockID,rotation) )
 		cursorY++;
 
-	if ( cursorY == 0 ) 
+	if ( cursorY == 0 )
 		return 1;
 
 	// Retract Y
