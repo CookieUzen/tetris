@@ -90,14 +90,19 @@ int main () {
 	clear();
 
 	// Enable Color
-	init_pair(1, COLOR_BLACK,COLOR_WHITE);
-	init_pair(2, COLOR_BLACK,COLOR_BLUE);
+	init_pair(1, COLOR_BLACK,COLOR_BLUE);
+	init_pair(2, COLOR_BLACK,COLOR_WHITE);
+	init_pair(3, COLOR_BLACK,COLOR_CYAN);
+	init_pair(4, COLOR_BLACK,COLOR_YELLOW);
+	init_pair(5, COLOR_BLACK,COLOR_RED);
+	init_pair(6, COLOR_BLACK,COLOR_GREEN);
+	init_pair(7, COLOR_BLACK,COLOR_MAGENTA);
 
 	// Start Game
 	cursorX = 0;
 	cursorY = 0;
 
-	cursorBlock = 4;
+	cursorBlock = 0;
 	cursorRotation = 0;
 	printGrid();
 	// Main Game Loop
@@ -129,6 +134,12 @@ int main () {
 				shadowBlock(cursorBlock,cursorRotation);
 				putBlock();
 				break;
+			case '=':
+				cursorBlock++;
+				break;
+			case '-':
+				cursorBlock--;
+				break;
 			default:
 				break;
 		}
@@ -139,7 +150,7 @@ int main () {
 		printHoverBlock(cursorBlock,cursorRotation);
 
 		// Diagnostics
-		mvprintw(10,10,"%d% d% d %d\n", cursorX, cursorY, cursorBlock, cursorRotation);
+		mvprintw(11,20,"%d% d% d %d\n", cursorX, cursorY, cursorBlock, cursorRotation);
 
 	} while ( ! checkGameStatus() );
 
@@ -179,17 +190,17 @@ void printGrid () {
 	for (int i = 0; i < WIDTH*2; i++)
 		printw("-");
 
-	attron(COLOR_PAIR(1));
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			move(i+1,j*2);
-			if ( grid[i][j] ) {
+			if ( grid[i][j] != 0 ) {
+				attron(COLOR_PAIR(grid[i][j]));
 				printw("  ");
 			}
 		}
 		printw("\n");
 	}
-	attroff(COLOR_PAIR(1));
+	attroff(COLOR_PAIR(cursorBlock+1));
 	for (int i = 0; i < WIDTH*2; i++)
 		printw("-");
 }
@@ -226,7 +237,7 @@ void filledRow () {
 // return 1 if gameover, 0 if game is continuing
 int checkGameStatus () {
 	for (int i = 0; i < WIDTH; i++)
-		if ( grid[1][i] == 1 )			// Add one spare row to top for buffer
+		if ( grid[2][i] == 1 )			// Add one spare row to top for buffer
 			return 1;
 
 	return 0;
@@ -306,7 +317,7 @@ int rotateBlock (int rotation, int blockID, int currentRotation) {
 // Write the block onto the tetris grid
 void putBlock() {
 	for (int i = 0; i < 4; i++)
-		grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = 1;
+		grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = cursorBlock+1;
 }
 
 // Set cursorY to the lowest possible position
@@ -329,9 +340,9 @@ int shadowBlock (int blockID, int rotation) {
 }
 
 void printHoverBlock (int blockID, int rotation) {
-	attron(COLOR_PAIR(2));
+	attron(COLOR_PAIR(blockID+1));
 	for (int i = 0; i < 4; i++) {
 		mvprintw(coordinateToY(block[blockID][rotation][i])+1,(coordinateToX(block[blockID][rotation][i])+cursorX)*2,"  ");
 	}
-	attroff(COLOR_PAIR(2));
+	attroff(COLOR_PAIR(blockID+1));
 }
