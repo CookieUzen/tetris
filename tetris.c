@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <ncurses.h>
+#include <time.h>
 
-#define HEIGHT 11
-#define WIDTH 5
+#define HEIGHT 22
+#define WIDTH 10
 
 void printGrid();
 void filledRow();
@@ -16,6 +17,7 @@ int rotateBlock(int rotation, int blockID, int currentRotation);
 void putBlock();
 int shadowBlock(int blockID, int rotation);
 void printHoverBlock(int blockID, int rotation);
+void generateBag();
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -51,6 +53,7 @@ const int blockSilloute[3][4][2] = {
 	{ {0,6}, {1,10}, {4,10}, {0,9} }, 	// flipped/normal L/T/Z Block
 };
 
+// Data on current cursor
 int cursorX;
 int cursorY;
 int cursorRotation;
@@ -70,7 +73,12 @@ static int grid[HEIGHT][WIDTH] = {
 	{0,0,0,0,0},
 };
 
+// Stores a bag/pool of tetrominos
+int bag[7];
+int bagIndex = 7;
 int main () {
+	// Seed randomness
+	srand(time(NULL));
 
 	// Terminal screen width/height
 	int row, col;
@@ -105,8 +113,25 @@ int main () {
 	cursorBlock = 0;
 	cursorRotation = 0;
 	printGrid();
+
 	// Main Game Loop
 	do {
+
+		if ( bagIndex == 7 ) {
+			generateBag();
+			bagIndex = 0;
+		}
+
+		cursorBlock = bag[bagIndex];
+
+		// Print grid and Print block
+		clear();
+		printGrid();
+		printHoverBlock(cursorBlock,cursorRotation);
+
+		// Diagnostics
+		// mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
+
 		char c;
 		c = getch();
 
@@ -133,55 +158,28 @@ int main () {
 			case ' ':
 				shadowBlock(cursorBlock,cursorRotation);
 				putBlock();
-				break;
-			case '=':
-				cursorBlock++;
-				break;
-			case '-':
-				cursorBlock--;
+				filledRow();
+				bagIndex++;
 				break;
 			default:
 				break;
 		}
 
-		clear();
-		printGrid();
-		shadowBlock(cursorBlock,cursorRotation);
-		printHoverBlock(cursorBlock,cursorRotation);
-
-		// Diagnostics
-		mvprintw(11,20,"%d% d% d %d\n", cursorX, cursorY, cursorBlock, cursorRotation);
 
 	} while ( ! checkGameStatus() );
 
-	/*
-	// Print Grid
-	printGrid();
-	shadowBlock(0,1);
-	printHoverBlock(0,1);
-	getch();
-
-	putBlock(0,1);
-	clear();
-	printGrid();
-	refresh();
-	getch();
-
-	filledRow();
-	clear();
-	printGrid();
-	getch();
-
-	*/
 
 	endwin();
+
+	// Debug
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			printf("%d ", grid[i][j]);
 		}
 		printf("\n");
 	}
-	exit(0);
+
+	return(0);
 }
 
 // Prints out Tetris Grid
@@ -237,7 +235,7 @@ void filledRow () {
 // return 1 if gameover, 0 if game is continuing
 int checkGameStatus () {
 	for (int i = 0; i < WIDTH; i++)
-		if ( grid[2][i] == 1 )			// Add one spare row to top for buffer
+		if ( grid[2][i] > 0 )			// Add one spare row to top for buffer
 			return 1;
 
 	return 0;
@@ -309,6 +307,8 @@ int rotateBlock (int rotation, int blockID, int currentRotation) {
 	if ( moveBlock(0, blockID, finalRotation) )
 		if ( moveBlock(1, blockID, finalRotation) )			// test moving block and right for wallkick
 			if ( moveBlock(-1, blockID, finalRotation) )
+				if ( moveBlock(2, blockID, finalRotation) )			// test moving block and right for wallkick
+					if ( moveBlock(-2, blockID, finalRotation) )
 				return 1;
 
 	return 0;
@@ -345,4 +345,31 @@ void printHoverBlock (int blockID, int rotation) {
 		mvprintw(coordinateToY(block[blockID][rotation][i])+1,(coordinateToX(block[blockID][rotation][i])+cursorX)*2,"  ");
 	}
 	attroff(COLOR_PAIR(blockID+1));
+}
+
+void generateBag () {
+	int i = 1;
+	bag[0] = rand()%7;
+
+	for (int i = 1; i < 7; i++) {
+		bag[i] = 7;
+	}
+
+	while ( i < 7 ) {
+		int r = rand()%7;
+		int repeat = 0;
+
+		for (int j = 0; j < 7; j++) {
+			if ( r == bag[j] ) {
+				repeat = 1;
+				break;
+			}
+		}
+
+		if ( ! repeat ) {
+			bag[i++] = r;
+		}
+	}
+
+	printf("\n");
 }
