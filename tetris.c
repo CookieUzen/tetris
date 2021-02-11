@@ -19,6 +19,8 @@ int shadowBlock(int blockID, int rotation);
 void printHoverBlock(int blockID, int rotation);
 void generateBag();
 void printGhostBlock();
+void hold();
+void printHold();
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -77,6 +79,9 @@ static int grid[HEIGHT][WIDTH] = {
 // Stores a bag/pool of tetrominos
 int bag[7];
 int bagIndex = 7;
+
+int buffer = 7;
+
 int main () {
 	// Seed randomness
 	srand(time(NULL));
@@ -131,9 +136,11 @@ int main () {
 		printHoverBlock(cursorBlock,cursorRotation);
 		shadowBlock(cursorBlock,cursorRotation);
 		printGhostBlock();
+		printHold();
 
 		// Diagnostics
 		// mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
+		mvprintw(HEIGHT,WIDTH*2+1,"%d %d %d", buffer, bag[bagIndex], bagIndex);
 
 		char c;
 		c = getch();
@@ -158,6 +165,9 @@ int main () {
 			case 'e':
 				rotateBlock(2,cursorBlock,cursorRotation);
 				break;
+			case 'f':
+				hold();
+				break;
 			case ' ':
 				shadowBlock(cursorBlock,cursorRotation);
 				putBlock();
@@ -168,9 +178,7 @@ int main () {
 				break;
 		}
 
-
 	} while ( ! checkGameStatus() );
-
 
 	endwin();
 
@@ -378,16 +386,38 @@ void generateBag () {
 }
 
 void printGhostBlock () {
-	move(0,0);
-
 	attron(A_BOLD);
+	attron(COLOR_PAIR(cursorBlock+1));
 
 	for (int i = 0; i < 4; i++) {
 		move(coordinateToY(block[cursorBlock][cursorRotation][i])+1+cursorY,(coordinateToX(block[cursorBlock][cursorRotation][i])+cursorX)*2);
-		attron(COLOR_PAIR(cursorBlock+1));
 		printw("  ");
 	}
 
 	attroff(COLOR_PAIR(cursorBlock+1));
 	attroff(A_BOLD);
+}
+
+void hold () {
+	if ( buffer == 7 ) {
+		buffer = bag[bagIndex];
+		bag[bagIndex] = 7;
+		bagIndex++;
+	} else {
+		int temp = buffer;
+		buffer = bag[bagIndex];
+		bag[bagIndex] = temp;
+	}
+
+}
+
+void printHold () {
+	attron(COLOR_PAIR(buffer+1));
+
+	for (int i = 0; i < 4; i++) {
+		move(coordinateToY(block[buffer][0][i])+1,(coordinateToX(block[buffer][0][i])+WIDTH+1)*2);
+		printw("  ");
+	}
+
+	attroff(COLOR_PAIR(buffer+1));
 }
