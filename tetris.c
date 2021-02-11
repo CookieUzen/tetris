@@ -18,6 +18,7 @@ void putBlock();
 int shadowBlock(int blockID, int rotation);
 void printHoverBlock(int blockID, int rotation);
 void generateBag();
+void printGhostBlock();
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -128,6 +129,8 @@ int main () {
 		clear();
 		printGrid();
 		printHoverBlock(cursorBlock,cursorRotation);
+		shadowBlock(cursorBlock,cursorRotation);
+		printGhostBlock();
 
 		// Diagnostics
 		// mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
@@ -372,4 +375,19 @@ void generateBag () {
 	}
 
 	printf("\n");
+}
+
+void printGhostBlock () {
+	move(0,0);
+
+	attron(A_BOLD);
+
+	for (int i = 0; i < 4; i++) {
+		move(coordinateToY(block[cursorBlock][cursorRotation][i])+1+cursorY,(coordinateToX(block[cursorBlock][cursorRotation][i])+cursorX)*2);
+		attron(COLOR_PAIR(cursorBlock+1));
+		printw("  ");
+	}
+
+	attroff(COLOR_PAIR(cursorBlock+1));
+	attroff(A_BOLD);
 }
