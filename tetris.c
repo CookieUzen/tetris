@@ -82,6 +82,8 @@ int bagIndex = 7;
 
 int buffer = 7;
 
+int score = 0;
+
 int main () {
 	// Seed randomness
 	srand(time(NULL));
@@ -140,7 +142,7 @@ int main () {
 
 		// Diagnostics
 		// mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
-		mvprintw(HEIGHT,WIDTH*2+1,"%d %d %d", buffer, bag[bagIndex], bagIndex);
+		mvprintw(HEIGHT,WIDTH*2+1,"Score: %d", score);
 
 		char c;
 		c = getch();
@@ -179,6 +181,11 @@ int main () {
 		}
 
 	} while ( ! checkGameStatus() );
+
+	clear();
+	mvprintw(row/2,(col-9)/2,"Game end!");
+	mvprintw(row/2+1,(col-21)/2,"You Scored %d points",score);
+	getch();
 
 	endwin();
 
@@ -238,6 +245,9 @@ void filledRow () {
 			for (int x = 0; x < WIDTH; x++) {
 				grid[0][x] = 0;
 			}
+
+			// Clearing a row gives 5 points
+			score += 5;
 		}
 	}
 }
@@ -329,6 +339,9 @@ int rotateBlock (int rotation, int blockID, int currentRotation) {
 void putBlock() {
 	for (int i = 0; i < 4; i++)
 		grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = cursorBlock+1;
+
+	// Dropping block adds 1 point
+	score++;
 }
 
 // Set cursorY to the lowest possible position
