@@ -190,12 +190,14 @@ int main () {
 	endwin();
 
 	// Debug
-	for (int i = 0; i < HEIGHT; i++) {
-		for (int j = 0; j < WIDTH; j++) {
-			printf("%d ", grid[i][j]);
-		}
-		printf("\n");
-	}
+	// for (int i = 0; i < HEIGHT; i++) {
+	// 	for (int j = 0; j < WIDTH; j++) {
+	// 		printf("%d ", grid[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+    printf("You Scored %d points!\n",score);
 
 	return(0);
 }
