@@ -365,6 +365,7 @@ int shadowBlock (int blockID, int rotation) {
 	return 0;
 }
 
+// Print a block hovering above the placed blocK
 void printHoverBlock (int blockID, int rotation) {
 	attron(COLOR_PAIR(blockID+1));
 	for (int i = 0; i < 4; i++) {
@@ -373,6 +374,7 @@ void printHoverBlock (int blockID, int rotation) {
 	attroff(COLOR_PAIR(blockID+1));
 }
 
+// Generates the bags (bag of 7 blocks) 
 void generateBag () {
 	int i = 1;
 	bag[0] = rand()%7;
@@ -400,6 +402,7 @@ void generateBag () {
 	printf("\n");
 }
 
+// Show position of block if placed
 void printGhostBlock () {
 	attron(A_BOLD);
 	attron(COLOR_PAIR(cursorBlock+1));
@@ -413,6 +416,7 @@ void printGhostBlock () {
 	attroff(A_BOLD);
 }
 
+// Put the current block in hold
 void hold () {
 	if ( buffer == 7 ) {
 		buffer = bag[bagIndex];
@@ -426,6 +430,7 @@ void hold () {
 
 }
 
+// Show the block on hold
 void printHold () {
 	attron(COLOR_PAIR(buffer+1));
 
