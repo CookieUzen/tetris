@@ -10,9 +10,10 @@ void filledRow();
 int checkGameStatus();
 int coordinateToX();
 int coordinateToY();
-int moveBlock(int x, int blockID, int rotation);
-int blockOut(int x, int blockID, int rotation);
-int blockCollision(int x, int blockID, int rotation);
+int checkBlock(int x, int y, int blockID, int rotation);
+int moveCursor(int x, int y, int blockID, int rotation);
+int blockOut(int x, int y, int blockID, int rotation);
+int blockCollision(int x, int y, int blockID, int rotation);
 int rotateBlock(int rotation, int blockID, int currentRotation);
 void putBlock();
 int shadowBlock(int blockID, int rotation);
@@ -61,20 +62,9 @@ int cursorX;
 int cursorY;
 int cursorRotation;
 int	cursorBlock;
-// static int grid[HEIGHT][WIDTH];
-static int grid[HEIGHT][WIDTH] = {
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-	{0,0,0,0,0},
-};
+
+// Defining the playing field
+static int grid[HEIGHT][WIDTH];
 
 // Stores a bag/pool of tetrominos
 int bag[7];
@@ -87,6 +77,12 @@ int score = 0;
 int main () {
 	// Seed randomness
 	srand(time(NULL));
+
+
+    // Initilazing the grid
+    for (int i = 0; i < HEIGHT; i++)
+        for (int j = 0; j < WIDTH; j++)
+            grid[HEIGHT][WIDTH] = 0;
 
 	// Terminal screen width/height
 	int row, col;
@@ -114,7 +110,7 @@ int main () {
 	init_pair(6, COLOR_BLACK,COLOR_GREEN);
 	init_pair(7, COLOR_BLACK,COLOR_MAGENTA);
 
-	// Start Game
+	// Initialize cursor value
 	cursorX = 0;
 	cursorY = 0;
 
@@ -125,11 +121,13 @@ int main () {
 	// Main Game Loop
 	do {
 
+        // Check if bag is empty, fill bag
 		if ( bagIndex == 7 ) {
 			generateBag();
 			bagIndex = 0;
 		}
 
+        // Set current block
 		cursorBlock = bag[bagIndex];
 
 		// Print grid and Print block
@@ -143,6 +141,7 @@ int main () {
 		// Diagnostics
 		// mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
 		mvprintw(HEIGHT,WIDTH*2+1,"Score: %d", score);
+        mvprintw(HEIGHT-2,WIDTH*2+1,"cx:%d cy:%d cr:%d cb:%d", cursorX, cursorY, cursorRotation, cursorBlock);
 
 		char c;
 		c = getch();
@@ -152,10 +151,10 @@ int main () {
 		// ad for left right, ws for rotate, eq to flip
 		switch (c) {
 			case 'a':
-				moveBlock(-1,cursorBlock,cursorRotation);
+				moveCursor(-1,0,cursorBlock,cursorRotation);
 				break;
 			case 'd':
-				moveBlock(1,cursorBlock,cursorRotation);
+				moveCursor(1,0,cursorBlock,cursorRotation);
 				break;
 			case 'w':
 				rotateBlock(1,cursorBlock,cursorRotation);
@@ -264,20 +263,29 @@ int checkGameStatus () {
 	return 0;
 }
 
-// Move tetromino left or right
-// Imagine that the block is placed ontop of the tetris grid array, with the top left corner of the tetromino 4 by 4 array on x/y of the array
-// x is the amount moved (negative for left)
-// return 1 if moveBlock failed, 0 if moveBlock is successful
-int moveBlock ( int x, int blockID, int rotation ) {
+// Check if a a block can be put into grid[y][x]
+// return 1 if moveCursor failed, 0 if moveCursor is successful
+int checkBlock ( int x, int y, int blockID, int rotation ) {
 	// Check if block out of bounds
-	if ( blockOut(x, blockID, rotation) )
+	if ( blockOut(x, y, blockID, rotation) )
 		return 1;
 
 	// Check if block collides with grid
-	if ( blockCollision(x, blockID, rotation) )
+	if ( blockCollision(x, y, blockID, rotation) )
 		return 1;
 
+	return 0;
+}
+
+// Move cursor into tetromino fits
+// Imagine that the block is placed ontop of the tetris grid array, with the top left corner of the tetromino 4 by 4 array on x/y of the array
+int moveCursor ( int x, int y, int blockID, int rotation ) {
+	// Check if block out of bounds
+	if ( checkBlock(x + cursorX, y + cursorY, blockID, rotation) )
+        return 1;
+
 	cursorX += x;
+    cursorY += y;
 	cursorRotation = rotation;
 	return 0;
 }
@@ -293,31 +301,29 @@ int coordinateToY ( int input ) {
 }
 
 // Check if the tetromino is out of bounds
-int blockOut ( int x, int blockID, int rotation ) {
+int blockOut ( int x, int y, int blockID, int rotation ) {
 	// BlockID that is than 1 have the same silloute
 	int xLeft   = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);
 	int xRight  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
-	int yTop    = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);
 	int yBottom = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
 
 	// check if out of bounds
-	if ( xLeft + cursorX + x < 0 || xRight + cursorX + x >= WIDTH )
+	if ( xLeft + x < 0 || xRight + x >= WIDTH )
 		return 1;
 
-	if ( cursorY + yTop < 0 || cursorY + yBottom >= HEIGHT )
+	if ( yBottom + y >= HEIGHT )
 		return 1;
 
 	return 0;
 }
 
 // Check if the tetromino is colliding with the playing field (if the tetromino is "in the ground")
-int	blockCollision (int x, int blockID, int rotation) {
+int	blockCollision (int x, int y, int blockID, int rotation) {
 	// check if hit other objects on the board
 	for (int i = 0; i < 4; i++)
-		if ( grid[coordinateToY(block[blockID][rotation][i]) + cursorY][coordinateToX(block[blockID][rotation][i]) + cursorX] )
+		if ( grid[coordinateToY(block[blockID][rotation][i]) + y][coordinateToX(block[blockID][rotation][i]) + x] )
 			return 1;
 
-	printf("\n");
 	return 0;
 }
 
@@ -326,18 +332,16 @@ int rotateBlock (int rotation, int blockID, int currentRotation) {
 
 	int finalRotation = ( currentRotation + rotation ) % 4;
 
-	// Check if block rotation is allowed (moveBlock returns 1 if it fails)
-	if ( moveBlock(0, blockID, finalRotation) )
-		if ( moveBlock(1, blockID, finalRotation) )			// test moving block and right for wallkick
-			if ( moveBlock(-1, blockID, finalRotation) )
-				if ( moveBlock(2, blockID, finalRotation) )			// test moving block and right for wallkick
-					if ( moveBlock(-2, blockID, finalRotation) )
-				return 1;
+	// Check if block rotation is allowed
+	if ( moveCursor(0, 0, blockID, finalRotation) )
+		if ( moveCursor(1, 0, blockID, finalRotation) )			// test moving block and right for wallkick
+			if ( moveCursor(-1, 0, blockID, finalRotation) )
+                return 1;
 
 	return 0;
 }
 
-// Write the block onto the tetris grid
+// Write the block defined by cursor variables onto the tetris grid
 void putBlock() {
 	for (int i = 0; i < 4; i++)
 		grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = cursorBlock+1;
@@ -353,7 +357,7 @@ int shadowBlock (int blockID, int rotation) {
 	cursorY = 0;
 
 	// Lower block until block hit grid
-	while ( ! moveBlock(0,blockID,rotation) )
+	while ( ! moveCursor(0,1,blockID,rotation) )
 		cursorY++;
 
 	if ( cursorY == 0 )
@@ -365,7 +369,7 @@ int shadowBlock (int blockID, int rotation) {
 	return 0;
 }
 
-// Print a block hovering above the placed blocK
+// Print a block hovering above the placed block
 void printHoverBlock (int blockID, int rotation) {
 	attron(COLOR_PAIR(blockID+1));
 	for (int i = 0; i < 4; i++) {
@@ -374,7 +378,7 @@ void printHoverBlock (int blockID, int rotation) {
 	attroff(COLOR_PAIR(blockID+1));
 }
 
-// Generates the bags (bag of 7 blocks) 
+// Generates the bags (bag of 7 blocks)
 void generateBag () {
 	int i = 1;
 	bag[0] = rand()%7;
@@ -398,8 +402,6 @@ void generateBag () {
 			bag[i++] = r;
 		}
 	}
-
-	printf("\n");
 }
 
 // Show position of block if placed
