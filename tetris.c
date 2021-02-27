@@ -190,12 +190,12 @@ int main () {
 	endwin();
 
 	// Debug
-	// for (int i = 0; i < HEIGHT; i++) {
-	// 	for (int j = 0; j < WIDTH; j++) {
-	// 		printf("%d ", grid[i][j]);
-	// 	}
-	// 	printf("\n");
-	// }
+	for (int i = 0; i < HEIGHT; i++) {
+		for (int j = 0; j < WIDTH; j++) {
+			printf("%d ", grid[i][j]);
+		}
+		printf("\n");
+	}
 
     printf("You Scored %d points!\n",score);
 
@@ -303,7 +303,7 @@ int coordinateToY ( int input ) {
 
 // Check if the tetromino is out of bounds
 int blockOut ( int x, int y, int blockID, int rotation ) {
-	// BlockID that is than 1 have the same silloute
+	// BlockID that is more than 1 have the same silloute
 	int xLeft   = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][0]);
 	int xRight  = coordinateToX(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
 	int yBottom = coordinateToY(blockSilloute[ (blockID <= 1) ? blockID : 2 ][rotation][1]);
@@ -355,17 +355,15 @@ void putBlock() {
 // Returns 1 if block cannot be placed here
 int shadowBlock (int blockID, int rotation) {
 	// Put block out of bounds
-	cursorY = 0;
+	// cursorY = 0;
 
 	// Lower block until block hit grid
 	while ( ! moveCursor(0,1,blockID,rotation) )
 		cursorY++;
 
-	if ( cursorY == 0 )
-		return 1;
-
 	// Retract Y
-	cursorY--;
+    if ( checkBlock(cursorX,cursorY,cursorBlock,cursorRotation) )
+        cursorY--;
 
 	return 0;
 }
