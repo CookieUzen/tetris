@@ -7,6 +7,11 @@
 
 void printGrid();
 void filledRow();
+void putBlock();
+void generateBag();
+void printBlock();
+void hold();
+void printHold();
 int checkGameStatus();
 int coordinateToX();
 int coordinateToY();
@@ -15,13 +20,7 @@ int moveCursor(int x, int y, int blockID, int rotation);
 int blockOut(int x, int y, int blockID, int rotation);
 int blockCollision(int x, int y, int blockID, int rotation);
 int rotateBlock(int rotation, int blockID, int currentRotation);
-void putBlock();
 int shadowBlock(int blockID, int rotation);
-void printHoverBlock(int blockID, int rotation);
-void generateBag();
-void printGhostBlock();
-void hold();
-void printHold();
 
 /*	Blocks are stored by block, based on a numbered 4 by 4 matrix
  *	+-----------+
@@ -82,7 +81,7 @@ int main () {
     // Initilazing the grid
     for (int i = 0; i < HEIGHT; i++)
         for (int j = 0; j < WIDTH; j++)
-            grid[HEIGHT][WIDTH] = 0;
+            grid[HEIGHT-1][WIDTH-1] = 0;
 
 	// Terminal screen width/height
 	int row, col;
@@ -133,9 +132,7 @@ int main () {
 		// Print grid and Print block
 		clear();
 		printGrid();
-		printHoverBlock(cursorBlock,cursorRotation);
-		shadowBlock(cursorBlock,cursorRotation);
-		printGhostBlock();
+		printBlock();
 		printHold();
 
 		// Diagnostics
@@ -146,7 +143,8 @@ int main () {
 		char c;
 		c = getch();
 
-		cursorY = 0;
+		// cursorY = 0;
+
 		// Read keyboard input until place block
 		// ad for left right, ws for rotate, eq to flip
 		switch (c) {
@@ -156,14 +154,16 @@ int main () {
 			case 'd':
 				moveCursor(1,0,cursorBlock,cursorRotation);
 				break;
-			case 'w':
+			case 's':
+				moveCursor(0,1,cursorBlock,cursorRotation);
+                break;
+			case 'e':
 				rotateBlock(1,cursorBlock,cursorRotation);
 				break;
-			case 's':
+			case 'q':
 				rotateBlock(5,cursorBlock,cursorRotation);	// 5 is 4 + 1, modulus in rotateBlock will turn into -1
 				break;
-			case 'q':	// Flip Block
-			case 'e':
+			case 'w':
 				rotateBlock(2,cursorBlock,cursorRotation);
 				break;
 			case 'f':
@@ -174,6 +174,7 @@ int main () {
 				putBlock();
 				filledRow();
 				bagIndex++;
+                cursorY = 0;
 				break;
 			default:
 				break;
@@ -369,15 +370,6 @@ int shadowBlock (int blockID, int rotation) {
 	return 0;
 }
 
-// Print a block hovering above the placed block
-void printHoverBlock (int blockID, int rotation) {
-	attron(COLOR_PAIR(blockID+1));
-	for (int i = 0; i < 4; i++) {
-		mvprintw(coordinateToY(block[blockID][rotation][i])+1,(coordinateToX(block[blockID][rotation][i])+cursorX)*2,"  ");
-	}
-	attroff(COLOR_PAIR(blockID+1));
-}
-
 // Generates the bags (bag of 7 blocks)
 void generateBag () {
 	int i = 1;
@@ -405,7 +397,7 @@ void generateBag () {
 }
 
 // Show position of block if placed
-void printGhostBlock () {
+void printBlock () {
 	attron(A_BOLD);
 	attron(COLOR_PAIR(cursorBlock+1));
 
