@@ -11,6 +11,8 @@ void putBlock();
 void generateBag();
 void printBlock();
 void printHold();
+void nextBlock();
+void update();
 int hold();
 int checkGameStatus();
 int coordinateToX();
@@ -62,6 +64,9 @@ int cursorY;
 int cursorRotation;
 int cursorBlock;
 
+// How many seconds can the play manipulate the tetris block
+int cursorTime = 5;
+
 // Defining the playing field
 static int grid[HEIGHT][WIDTH];
 
@@ -75,6 +80,8 @@ int cursorHold = 0;
 int buffer = 7;
 
 int score = 0;
+
+clock_t timer;
 
 int main () {
     // Seed randomness
@@ -120,30 +127,23 @@ int main () {
     cursorRotation = 0;
     printGrid();
 
+    timer = clock();
+    
+    update();
+
     // Main Game Loop
     do {
+        // don't print screen if skip = 1
+        int skip = 0;
 
-        // Check if bag is empty, fill bag
-        if ( bagIndex == 7 ) {
-            generateBag();
-            bagIndex = 0;
+        // Time since last block()
+        if ( (double)(clock() - timer) / CLOCKS_PER_SEC >= 5 ) {
+            nextBlock();
+            skip = 1;
         }
 
-        // Set current block
-        cursorBlock = bag[bagIndex];
-
-        // Print grid and Print block
-        clear();
-        printGrid();
-        printBlock();
-        printHold();
-
-        // Diagnostics
-        // mvprintw(0,HEIGHT+2,"%d% d% d %d %d\n", cursorX, cursorY, cursorBlock, cursorRotation, bagIndex);
-        mvprintw(HEIGHT,WIDTH*2+1,"Score: %d", score);
-        mvprintw(HEIGHT-2,WIDTH*2+1,"cx:%d cy:%d cr:%d cb:%d", cursorX, cursorY, cursorRotation, cursorBlock);
-
         char c;
+        timeout(0);    // make getch() non blocking
         c = getch();
 
         // Read keyboard input until place block
@@ -171,17 +171,20 @@ int main () {
                 hold();
                 break;
             case ' ':
-                // Quick drop block from cursor position, then place block
-                shadowBlock(cursorBlock,cursorRotation);
-                putBlock();
-
-                filledRow();
-                bagIndex++;
-                cursorHold = 0;
+                nextBlock();
                 break;
             default:
+                skip = 1;
                 break;
         }
+        
+        // No not reprint screen if there is no change
+        if ( skip == 1 ) {
+            mvprintw(HEIGHT-1,WIDTH*2+1,"timer: %f", cursorTime - (double)( clock() - timer) / CLOCKS_PER_SEC );
+            continue;
+        }
+
+        update();
 
     } while ( ! checkGameStatus() );
 
@@ -350,9 +353,6 @@ void putBlock() {
     for (int i = 0; i < 4; i++)
         grid[coordinateToY(block[cursorBlock][cursorRotation][i]) + cursorY][coordinateToX(block[cursorBlock][cursorRotation][i]) + cursorX] = cursorBlock+1;
 
-    // Reset cursor position
-    cursorY = 0;
-
     // Dropping block adds 1 point
     score++;
 }
@@ -452,4 +452,43 @@ void printHold () {
     }
 
     attroff(COLOR_PAIR(buffer+1));
+}
+
+// Quick drop block from cursor position, then place block
+// Then prepare for the next block
+void nextBlock () {
+    shadowBlock(cursorBlock,cursorRotation);
+    putBlock();
+
+    cursorY = 0;
+    cursorX = 0;
+
+    filledRow();
+    bagIndex++;
+    cursorHold = 0;
+    timer = clock();
+
+    update();
+}
+
+void update () {
+    // Check if bag is empty, fill bag
+    if ( bagIndex == 7 ) {
+        generateBag();
+        bagIndex = 0;
+    }
+
+    // Set current block
+    cursorBlock = bag[bagIndex];
+
+    // Print grid and Print block
+    clear();
+    printGrid();
+    printBlock();
+    printHold();
+
+    // Diagnostics
+    mvprintw(HEIGHT-1,WIDTH*2+1,"timer: %f", cursorTime - (double)( clock() - timer) / CLOCKS_PER_SEC );
+    mvprintw(HEIGHT,WIDTH*2+1,"Score: %d", score);
+    mvprintw(HEIGHT-2,WIDTH*2+1,"cx:%d cy:%d cr:%d cb:%d", cursorX, cursorY, cursorRotation, cursorBlock);
 }
