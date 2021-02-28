@@ -10,9 +10,10 @@ The game is in development.
 To control the block.
 
 - A/D moves left and right
-- W/S rotate the block by 90 degrees
-- Q/E rotate the block by 180 degrees
+- Q/E rotate the block by 90 degrees
+- W rotate the block by 180 degrees
 - F to hold block
+- S lower the block
 - SPACE to place block
 
 ## Compiling
