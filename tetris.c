@@ -119,16 +119,15 @@ int main () {
     init_pair(6, COLOR_BLACK,COLOR_GREEN);
     init_pair(7, COLOR_BLACK,COLOR_MAGENTA);
 
-    // Initialize cursor value
-    cursorX = 0;
-    cursorY = 0;
-
-    cursorBlock = 0;
     cursorRotation = 0;
     printGrid();
 
     timer = clock();
     
+    // Initialize cursor value
+    cursorY = 0;
+    cursorX = WIDTH/2 - 2; // Center
+
     update();
 
     // Main Game Loop
@@ -460,11 +459,12 @@ void nextBlock () {
     shadowBlock(cursorBlock,cursorRotation);
     putBlock();
 
-    cursorY = 0;
-    cursorX = 0;
-
     filledRow();
     bagIndex++;
+
+    cursorY = 0;
+    cursorX = (WIDTH - 1 - (coordinateToX(blockSilloute[ (cursorBlock <= 1) ? cursorBlock : 2 ][cursorRotation][1] - blockSilloute[ (cursorBlock <= 1) ? cursorBlock : 2 ][cursorRotation][0])))/2; // Center
+
     cursorHold = 0;
     timer = clock();
 
