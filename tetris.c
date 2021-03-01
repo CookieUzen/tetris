@@ -65,7 +65,9 @@ int cursorRotation;
 int cursorBlock;
 
 // How many seconds can the play manipulate the tetris block
-int cursorTime = 5;
+float cursorTime = 7;
+// Time for block to drop
+float cursorSpeed;
 
 // Defining the playing field
 static int grid[HEIGHT][WIDTH];
@@ -81,12 +83,11 @@ int buffer = 7;
 
 int score = 0;
 
-clock_t timer;
+clock_t timer, dropTime;
 
 int main () {
     // Seed randomness
     srand(time(NULL));
-
 
     // Initilazing the grid
     for (int i = 0; i < HEIGHT; i++)
@@ -122,21 +123,29 @@ int main () {
     cursorRotation = 0;
     printGrid();
 
-    timer = clock();
-    
     // Initialize cursor value
     cursorY = 0;
     cursorX = WIDTH/2 - 2; // Center
 
     update();
 
+    timer = clock();
+    dropTime = timer;
+
     // Main Game Loop
     do {
         // don't print screen if skip = 1
         int skip = 0;
 
-        // Time since last block()
-        if ( (double)(clock() - timer) / CLOCKS_PER_SEC >= 5 ) {
+        // Lower block every few seconds
+        if ( (double)(clock() - dropTime) / CLOCKS_PER_SEC >= cursorSpeed ) {
+            moveCursor(0,1,cursorBlock,cursorRotation);
+            update();
+            dropTime = clock();
+        }
+
+        // Drop block if time is up
+        if ( (double)(clock() - timer) / CLOCKS_PER_SEC >= cursorTime ) {
             nextBlock();
             skip = 1;
         }
@@ -195,12 +204,12 @@ int main () {
     endwin();
 
     // Debug
-    for (int i = 0; i < HEIGHT; i++) {
-        for (int j = 0; j < WIDTH; j++) {
-            printf("%d ", grid[i][j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < HEIGHT; i++) {
+    //     for (int j = 0; j < WIDTH; j++) {
+    //         printf("%d ", grid[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     printf("You Scored %d points!\n",score);
 
@@ -419,9 +428,10 @@ int hold () {
     if ( cursorHold )
         return 1;
 
-    if ( moveCursor(0, 0, cursorBlock, cursorRotation) )
-        if ( moveCursor(1, 0, cursorBlock, cursorRotation) )    // test moving block and right for wallkick
-            if ( moveCursor(-1, 0, cursorBlock, cursorRotation) )
+    // Check if block can fit
+    if ( moveCursor(0, 0, buffer, cursorRotation) )
+        if ( moveCursor(1, 0, buffer, cursorRotation) )    // test moving block and right for wallkick
+            if ( moveCursor(-1, 0, buffer, cursorRotation) )
                 return 1;
 
     // If no block in hold
@@ -435,10 +445,13 @@ int hold () {
         bag[bagIndex] = temp;
     }
 
-    cursorHold = 1;
 
-    // Put hold at top of screen
-    cursorY = 0;
+    // disable hold after one hold
+    // cursorHold = 1;
+    // cursorY = 0;
+    // timer = clock();
+
+    return 0;
 }
 
 // Show the block on hold
@@ -468,6 +481,9 @@ void nextBlock () {
     cursorHold = 0;
     timer = clock();
 
+    if ( cursorTime > 3 )   // minimal time threshold
+        cursorTime -= 0.1;  // Less time
+
     update();
 }
 
@@ -480,6 +496,9 @@ void update () {
 
     // Set current block
     cursorBlock = bag[bagIndex];
+
+    // update cursorSpeed
+    cursorSpeed = cursorTime/HEIGHT;
 
     // Print grid and Print block
     clear();
