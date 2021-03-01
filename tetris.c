@@ -13,6 +13,7 @@ void printBlock();
 void printHold();
 void nextBlock();
 void update();
+void printGhostBlock();
 int hold();
 int checkGameStatus();
 int coordinateToX();
@@ -65,7 +66,7 @@ int cursorRotation;
 int cursorBlock;
 
 // How many seconds can the play manipulate the tetris block
-float cursorTime = 7;
+float cursorTime = 10;
 // Time for block to drop
 float cursorSpeed;
 
@@ -102,6 +103,7 @@ int main () {
     cbreak();
     noecho();
     getmaxyx(stdscr,row,col);
+	keypad(stdscr, TRUE);
     start_color();
 
     // Game Start Screen
@@ -158,23 +160,30 @@ int main () {
         // ad for left right, ws for rotate, eq to flip
         switch (c) {
             case 'a':
+            case KEY_LEFT:
                 moveCursor(-1,0,cursorBlock,cursorRotation);
                 break;
+            case KEY_RIGHT:
             case 'd':
                 moveCursor(1,0,cursorBlock,cursorRotation);
                 break;
+            case KEY_DOWN:
             case 's':
                 moveCursor(0,1,cursorBlock,cursorRotation);
                 break;
+            case 'x':
             case 'e':
                 rotateBlock(1,cursorBlock,cursorRotation);
                 break;
+            case KEY_UP:
             case 'q':
                 rotateBlock(5,cursorBlock,cursorRotation);  // 5 is 4 + 1, modulus in rotateBlock will turn into -1
                 break;
+            case 'c':
             case 'w':
                 rotateBlock(2,cursorBlock,cursorRotation);
                 break;
+            case 'z':
             case 'f':
                 hold();
                 break;
@@ -503,6 +512,7 @@ void update () {
     // Print grid and Print block
     clear();
     printGrid();
+    printGhostBlock();
     printBlock();
     printHold();
 
@@ -510,4 +520,17 @@ void update () {
     mvprintw(HEIGHT-1,WIDTH*2+1,"timer: %f", cursorTime - (double)( clock() - timer) / CLOCKS_PER_SEC );
     mvprintw(HEIGHT,WIDTH*2+1,"Score: %d", score);
     mvprintw(HEIGHT-2,WIDTH*2+1,"cx:%d cy:%d cr:%d cb:%d", cursorX, cursorY, cursorRotation, cursorBlock);
+}
+
+// Show position of block if placed
+void printGhostBlock () {
+    int temp = cursorY;
+
+    shadowBlock(cursorBlock,cursorRotation);
+	for (int i = 0; i < 4; i++) {
+		move(coordinateToY(block[cursorBlock][cursorRotation][i])+1+cursorY,(coordinateToX(block[cursorBlock][cursorRotation][i])+cursorX)*2);
+		printw("[]");
+	}
+
+    cursorY = temp;
 }
