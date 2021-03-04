@@ -6,7 +6,7 @@ The game is in development.
 ## Control Scheme
 	q w e
 	a s d f 
-	SPACE
+	 SPACE
 To control the block.
 
 - A/D moves left and right
@@ -15,6 +15,14 @@ To control the block.
 - F to hold block
 - S lower the block
 - SPACE to place block
+
+## Control Scheme 2
+- LEFT RIGHT arrow keys to move block left and right
+- DOWN to lower block by one
+- SPACE to drop block
+- UP/X to rotate block by 90 degrees
+- C to rotate by 180 degrees
+- Z to hold block
 
 ## Compiling
 

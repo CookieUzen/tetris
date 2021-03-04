@@ -152,7 +152,7 @@ int main () {
             skip = 1;
         }
 
-        char c;
+        int c;
         timeout(0);    // make getch() non blocking
         c = getch();
 
