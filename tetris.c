@@ -138,16 +138,17 @@ int main () {
 	do {
 		// don't print screen if skip = 1
 		int skip = 0;
+		int now = clock();
 
 		// Lower block every few seconds
-		if ( (double)(clock() - dropTime) / CLOCKS_PER_SEC >= cursorSpeed ) {
+		if ( (double)(now - dropTime) / CLOCKS_PER_SEC >= cursorSpeed ) {
 			moveCursor(0,1,cursorBlock,cursorRotation);
 			update();
 			dropTime = clock();
 		}
 
 		// Drop block if time is up
-		if ( (double)(clock() - timer) / CLOCKS_PER_SEC >= cursorTime ) {
+		if ( (double)(now - timer) / CLOCKS_PER_SEC >= cursorTime ) {
 			nextBlock();
 			skip = 1;
 		}
@@ -188,6 +189,10 @@ int main () {
 				hold();
 				break;
 			case ' ':
+				// Stop user from accidentally drop twice
+				if ( (double)(now - timer) / CLOCKS_PER_SEC < 0.3 ) 
+					break;
+
 				nextBlock();
 				break;
 			default:
@@ -492,7 +497,7 @@ void nextBlock () {
 	cursorHold = 0;
 	timer = clock();
 
-	if ( cursorTime > 4 )	// minimal time threshold
+	if ( cursorTime > 3.5 )	// minimal time threshold
 		cursorTime -= 0.1;	// Less time
 
 	update();
