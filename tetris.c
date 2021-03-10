@@ -5,6 +5,12 @@
 #define HEIGHT 22
 #define WIDTH 10
 
+#define ACCIDENTDROP 0.3
+
+#define MINTIME 3.5
+#define MAXTIME 10
+#define INCREMENTTIME 0.1
+
 void printGrid();
 void filledRow();
 void putBlock();
@@ -66,7 +72,7 @@ int cursorRotation;
 int cursorBlock;
 
 // How many seconds can the play manipulate the tetris block
-float cursorTime = 10;
+float cursorTime = MAXTIME;
 // Time for block to drop
 float cursorSpeed;
 
@@ -190,7 +196,7 @@ int main () {
 				break;
 			case ' ':
 				// Stop user from accidentally drop twice
-				if ( (double)(now - timer) / CLOCKS_PER_SEC < 0.3 ) 
+				if ( (double)(now - timer) / CLOCKS_PER_SEC < ACCIDENTDROP )
 					break;
 
 				nextBlock();
@@ -199,7 +205,7 @@ int main () {
 				skip = 1;
 				break;
 		}
-		
+
 		// No not reprint screen if there is no change
 		if ( skip == 1 ) {
 			mvprintw(HEIGHT-1,WIDTH*2+1,"timer: %f", cursorTime - (double)( clock() - timer) / CLOCKS_PER_SEC );
@@ -497,8 +503,8 @@ void nextBlock () {
 	cursorHold = 0;
 	timer = clock();
 
-	if ( cursorTime > 3.5 )	// minimal time threshold
-		cursorTime -= 0.1;	// Less time
+	if ( cursorTime > MINTIME )	// minimal time threshold
+		cursorTime -= INCREMENTTIME;	// Less time
 
 	update();
 }
