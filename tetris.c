@@ -441,7 +441,9 @@ int hold () {
 	if ( moveCursor(0, 0, buffer, cursorRotation) )
 		if ( moveCursor(1, 0, buffer, cursorRotation) )    // test moving block and right for wallkick
 			if ( moveCursor(-1, 0, buffer, cursorRotation) )
-				return 1;
+				if ( moveCursor(0, -1, buffer, cursorRotation) )
+					if ( moveCursor(0, -2, buffer, cursorRotation) )
+						return 1;
 
 	// If no block in hold
 	if ( buffer == 7 ) {
@@ -490,7 +492,7 @@ void nextBlock () {
 	cursorHold = 0;
 	timer = clock();
 
-	if ( cursorTime > 3 )	// minimal time threshold
+	if ( cursorTime > 4 )	// minimal time threshold
 		cursorTime -= 0.1;	// Less time
 
 	update();
