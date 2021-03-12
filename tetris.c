@@ -70,6 +70,7 @@ int cursorX;
 int cursorY;
 int cursorRotation;
 int cursorBlock;
+int touching;
 
 // How many seconds can the play manipulate the tetris block
 float cursorTime = MAXTIME;
@@ -90,7 +91,7 @@ int buffer = 7;
 
 int score = 0;
 
-clock_t timer, dropTime;
+clock_t timer, dropTime, touching_t;
 
 int main () {
 	// Seed randomness
@@ -135,6 +136,8 @@ int main () {
 	cursorY = 0;
 	cursorX = WIDTH/2 - 2; // Center
 
+	touching = 0;
+
 	update();
 
 	timer = clock();
@@ -158,6 +161,23 @@ int main () {
 			nextBlock();
 			skip = 1;
 		}
+	
+		// Test is block is on the ground
+		int tmp = cursorY;
+		shadowBlock(cursorBlock,cursorRotation);
+		if ( cursorY == tmp ) {
+			if ( touching == 0 ) {
+				touching = 1;
+				touching_t = clock();
+			}
+
+			if ( (double)(now - touching_t) / CLOCKS_PER_SEC >= 0.5 ) {
+				nextBlock();
+				skip = 1;
+			}
+		} else {
+			cursorY = tmp;
+		}
 
 		int c;
 		timeout(0);    // make getch() non blocking
@@ -178,12 +198,12 @@ int main () {
 			case 's':
 				moveCursor(0,1,cursorBlock,cursorRotation);
 				break;
-			case 'x':
-			case 'e':
-				rotateBlock(1,cursorBlock,cursorRotation);
-				break;
 			case KEY_UP:
 			case 'q':
+				rotateBlock(1,cursorBlock,cursorRotation);
+				break;
+			case 'x':
+			case 'e':
 				rotateBlock(5,cursorBlock,cursorRotation);	// 5 is 4 + 1, modulus in rotateBlock will turn into -1
 				break;
 			case 'c':
@@ -205,12 +225,14 @@ int main () {
 				skip = 1;
 				break;
 		}
-
+		
 		// No not reprint screen if there is no change
 		if ( skip == 1 ) {
 			mvprintw(HEIGHT-1,WIDTH*2+1,"timer: %f", cursorTime - (double)( clock() - timer) / CLOCKS_PER_SEC );
 			continue;
 		}
+
+		touching = 0;
 
 		update();
 
@@ -371,7 +393,11 @@ int rotateBlock (int rotation, int blockID, int currentRotation) {
 	if ( moveCursor(0, 0, blockID, finalRotation) )
 		if ( moveCursor(1, 0, blockID, finalRotation) )			// test moving block and right for wallkick
 			if ( moveCursor(-1, 0, blockID, finalRotation) )
-				return 1;
+				if ( moveCursor(0, -1, blockID, finalRotation) )	// test up and down
+					if ( moveCursor(0, -2, blockID, finalRotation) )
+						if ( moveCursor(-2, 0, blockID, finalRotation) ) // test double left right
+							if ( moveCursor(2, 0, blockID, finalRotation) ) // test double left right
+								return 1;
 
 	return 0;
 }
@@ -469,7 +495,7 @@ int hold () {
 
 
 	// disable hold after one hold
-	// cursorHold = 1;
+	cursorHold = 1;
 	// cursorY = 0;
 	// timer = clock();
 
@@ -505,6 +531,8 @@ void nextBlock () {
 
 	if ( cursorTime > MINTIME )	// minimal time threshold
 		cursorTime -= INCREMENTTIME;	// Less time
+
+	touching = 0;
 
 	update();
 }
