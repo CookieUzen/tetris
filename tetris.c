@@ -155,12 +155,6 @@ int main () {
 			update();
 			dropTime = clock();
 		}
-
-		// Drop block if time is up
-		if ( (double)(now - timer) / CLOCKS_PER_SEC >= cursorTime ) {
-			nextBlock();
-			skip = 1;
-		}
 	
 		// Test is block is on the ground
 		int tmp = cursorY;
