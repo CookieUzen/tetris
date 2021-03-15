@@ -215,6 +215,11 @@ int main () {
 
 				nextBlock();
 				break;
+			case 'p':
+				timeout(-1);
+				getch();
+				timeout(0);
+				break;
 			default:
 				skip = 1;
 				break;

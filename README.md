@@ -15,6 +15,7 @@ To control the block.
 - F to hold block
 - S lower the block
 - SPACE to place block
+- P to pause
 
 ## Control Scheme 2
 - LEFT RIGHT arrow keys to move block left and right
@@ -23,6 +24,7 @@ To control the block.
 - UP/X to rotate block by 90 degrees
 - C to rotate by 180 degrees
 - Z to hold block
+- P to pause
 
 ## Compiling
 
